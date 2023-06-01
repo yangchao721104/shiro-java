@@ -3,6 +3,7 @@ package com.yang.shiro.controller;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 import org.springframework.stereotype.Controller;
@@ -62,4 +63,12 @@ public class MyController {
         return "验证角色成功";
     }
 
+    //登录认证校验权限
+    @RequiresPermissions("user:delete")
+    @GetMapping("/userPermissions")
+    @ResponseBody
+    public String userLoginPermissions(){
+        System.out.println("登录认证验证权限");
+        return "验证权限成功";
+    }
 }

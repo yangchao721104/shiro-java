@@ -7,11 +7,15 @@ import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.SimpleAuthenticationInfo;
 import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.util.ByteSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author yang
@@ -24,13 +28,29 @@ public class MyRealm extends AuthorizingRealm {
     private UserService userService;
 
     /**
-     * 自定义授权方法
+     * 自定义授权方法：获取当前登录用户的角色、权限信息，返回给shiro用来进行权限认证
      * @param principalCollection
      * @return
      */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        return null;
+        System.out.println("自定义授权方法");
+
+        String principal = principalCollection.getPrimaryPrincipal().toString();
+        //获取当前登录用户的角色信息
+        List<String> roles = userService.getUserRoleInfo(principal);
+        System.out.println("当前登录用户的角色信息 = " + roles);
+        //获取当前登录用户的权限信息
+        List<String> permissions = userService.getUserPermissionInfo(roles);
+        System.out.println("当前登录用户的权限信息 = " + permissions);
+
+        //创建对象，封装当前登录用户的角色、权限信息
+        SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
+        //存储角色
+        authorizationInfo.addRoles(roles);
+        authorizationInfo.addStringPermissions(permissions);
+
+        return authorizationInfo;
     }
 
     /**

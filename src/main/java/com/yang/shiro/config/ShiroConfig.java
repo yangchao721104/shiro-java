@@ -1,8 +1,11 @@
 package com.yang.shiro.config;
 
+import at.pollux.thymeleaf.shiro.dialect.ShiroDialect;
 import com.yang.shiro.realm.MyRealm;
-import com.yang.shiro.service.UserService;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
+import org.apache.shiro.cache.CacheManager;
+import org.apache.shiro.cache.ehcache.EhCacheManager;
+import org.apache.shiro.io.ResourceUtils;
 import org.apache.shiro.spring.web.config.DefaultShiroFilterChainDefinition;
 import org.apache.shiro.spring.web.config.ShiroFilterChainDefinition;
 import org.apache.shiro.web.mgt.CookieRememberMeManager;
@@ -11,6 +14,10 @@ import org.apache.shiro.web.servlet.SimpleCookie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author yang
@@ -37,8 +44,29 @@ public class ShiroConfig {
         defaultWebSecurityManager.setRealm(myRealm);
         //设置remember
         defaultWebSecurityManager.setRememberMeManager(rememberMeManager());
+
+        //设置缓存管理器
+        defaultWebSecurityManager.setCacheManager(getEhCacheManager());
         //返回
         return defaultWebSecurityManager;
+    }
+
+    //缓存管理器
+    public CacheManager getEhCacheManager() {
+        EhCacheManager ehCacheManager = new EhCacheManager();
+        //获取编译目录下的资源流对象
+        InputStream input = null;
+        try {
+            input = ResourceUtils.getInputStreamForPath("classpath:ehcache/ehcache-shiro.xml");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //获取ehcache的缓存管理对象
+        net.sf.ehcache.CacheManager cacheManager = new net.sf.ehcache.CacheManager(input);
+        //获取缓存对象
+        ehCacheManager.setCacheManager(cacheManager);
+
+        return ehCacheManager;
     }
 
     //配置shiro内置过滤器拦截范围
@@ -74,6 +102,12 @@ public class ShiroConfig {
         cookie.setHttpOnly(true);
         cookie.setMaxAge(30*24*60*60);
         return cookie;
+    }
+
+    //shiro标签配置
+    @Bean
+    public ShiroDialect shiroDialect(){
+        return new ShiroDialect();
     }
 
 
